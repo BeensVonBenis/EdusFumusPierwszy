@@ -9,6 +9,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 data class SchoolPlanTile(
     val subject: String,
@@ -23,6 +26,23 @@ data class ClassTile(
     val id: String,
     val name: String,
 )
+
+data class PeriodStartEnd(
+    val id: Int,
+    val start: String,
+    val end: String
+)
+
+fun minutesFromMidnight(now: LocalDateTime): Int {
+    val midnight = now.toLocalDate().atStartOfDay() // midnight today
+    return ChronoUnit.MINUTES.between(midnight, now).toInt()
+}
+
+fun timeStringToMinutes(timeString: String): Int {
+    val separator = if (timeString.contains(":")) ":" else "."
+    val (hours, minutes) = timeString.split(separator).map { it.toInt() }
+    return hours * 60 + minutes
+}
 
 object LekcjeUtils {
     val retrofit = Retrofit.Builder()
@@ -229,6 +249,19 @@ object LekcjeUtils {
             classesList.add(classTile);
         }
         return classesList;
+    }
+
+    fun getStartEndTimes() : List<PeriodStartEnd>{
+        val periodsList = mutableListOf<PeriodStartEnd>();
+        bufferedData?.get(1)?.asJsonObject?.getAsJsonArray("data_rows")?.forEach { el->
+            val periodStartEnd = PeriodStartEnd(
+                id=el.asJsonObject.get("id").asInt,
+                end=el.asJsonObject.get("endtime").asString,
+                start=el.asJsonObject.get("starttime").asString
+            )
+            periodsList.add(periodStartEnd)
+        }
+        return periodsList
     }
 
     fun getTeachersList(): List<ClassTile> {

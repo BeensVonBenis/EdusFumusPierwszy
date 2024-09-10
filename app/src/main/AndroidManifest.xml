@@ -30,7 +30,7 @@
             android:name=".widget.SchoolPlanWidgetReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.APPWIDGET_UPDATE" />
+                <action android:name="android.appwidget.action.SCHOOL_PLAN_WIDGET_UPDATE" />
             </intent-filter>
 
             <meta-data
