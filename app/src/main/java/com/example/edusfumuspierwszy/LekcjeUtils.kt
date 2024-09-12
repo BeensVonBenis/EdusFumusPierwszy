@@ -1,8 +1,12 @@
 package com.example.edusfumuspierwszy
 
+import android.content.Context
+import android.content.SharedPreferences
+import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.google.gson.reflect.TypeToken
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -42,6 +46,42 @@ fun timeStringToMinutes(timeString: String): Int {
     val separator = if (timeString.contains(":")) ":" else "."
     val (hours, minutes) = timeString.split(separator).map { it.toInt() }
     return hours * 60 + minutes
+}
+
+fun getPreferences(context: Context): SharedPreferences {
+    return context.getSharedPreferences("school_plan_cache", Context.MODE_PRIVATE)
+}
+
+fun saveSchoolPlanToCache(
+    context: Context,
+    selectedClassId: String,
+    schoolPlan: List<List<SchoolPlanTile>>
+) {
+    val sharedPreferences = getPreferences(context)
+    val editor = sharedPreferences.edit()
+
+    // Convert the school plan to JSON string
+    val gson = Gson()
+    val json = gson.toJson(schoolPlan)
+
+    // Store the data with the class ID as the key
+    editor.putString("school_plan_$selectedClassId", json)
+    editor.apply() // Apply changes asynchronously
+}
+
+fun getCachedSchoolPlan(
+    context: Context,
+    selectedClassId: String
+): List<List<SchoolPlanTile>>? {
+    val sharedPreferences = getPreferences(context)
+
+    // Retrieve the JSON string for the selected class ID
+    val json = sharedPreferences.getString("school_plan_$selectedClassId", null) ?: return null
+
+    // Convert the JSON back to a List<List<SchoolPlanTile>>
+    val gson = Gson()
+    val type = object : TypeToken<List<List<SchoolPlanTile>>>() {}.type
+    return gson.fromJson(json, type)
 }
 
 object LekcjeUtils {
@@ -196,7 +236,10 @@ object LekcjeUtils {
         return currentSchoolPlan;
     }
 
-    private fun generateSchoolPlan(selectedClassId: String?): List<List<SchoolPlanTile>> {
+    private fun generateSchoolPlan(
+        context: Context,
+        selectedClassId: String?
+    ): List<List<SchoolPlanTile>> {
         val tiles = bufferedData?.get(20)?.asJsonObject?.getAsJsonArray("data_rows")
         val filteredLessons = filterLessons(selectedClassId, null);
         var filteredTiles: JsonArray? = null
@@ -210,6 +253,10 @@ object LekcjeUtils {
 
         val schoolPlan = parseDataForSchoolPlan(filteredTiles, filteredLessons)
         this.bufferedSchoolPlan = schoolPlan;
+        if (schoolPlan != null) {
+            selectedClassId?.let { saveSchoolPlanToCache(context, it, schoolPlan) }
+        }
+
         return schoolPlan;
     }
 
@@ -229,14 +276,23 @@ object LekcjeUtils {
         return schoolPlan;
     }
 
-    fun getSchoolPlan(selectedClassId: String?): List<List<SchoolPlanTile>>? {
-        return if (bufferedSchoolPlan != null && selectedClassId == bufferedSelectedClassId) {
-            bufferedSchoolPlan;
-        } else {
-            this.bufferedSelectedClassId = selectedClassId;
-            generateSchoolPlan(selectedClassId);
-            bufferedSchoolPlan;
+    fun getSchoolPlan(context: Context, selectedClassId: String?): List<List<SchoolPlanTile>>? {
+        // If class ID is null, return null
+        if (selectedClassId == null) return null
+
+        // Check if the school plan is available in cache
+        val cachedSchoolPlan = getCachedSchoolPlan(context, selectedClassId)
+
+        // If cached school plan exists, return it
+        if (cachedSchoolPlan != null) {
+            return cachedSchoolPlan
         }
+
+        // If not cached, generate the school plan and cache it
+        val generatedSchoolPlan = generateSchoolPlan(context, selectedClassId)
+
+        // Return the newly generated school plan
+        return generatedSchoolPlan
     }
 
     fun getClassesList(): List<ClassTile> {
@@ -251,13 +307,13 @@ object LekcjeUtils {
         return classesList;
     }
 
-    fun getStartEndTimes() : List<PeriodStartEnd>{
+    fun getStartEndTimes(): List<PeriodStartEnd> {
         val periodsList = mutableListOf<PeriodStartEnd>();
-        bufferedData?.get(1)?.asJsonObject?.getAsJsonArray("data_rows")?.forEach { el->
+        bufferedData?.get(1)?.asJsonObject?.getAsJsonArray("data_rows")?.forEach { el ->
             val periodStartEnd = PeriodStartEnd(
-                id=el.asJsonObject.get("id").asInt,
-                end=el.asJsonObject.get("endtime").asString,
-                start=el.asJsonObject.get("starttime").asString
+                id = el.asJsonObject.get("id").asInt,
+                end = el.asJsonObject.get("endtime").asString,
+                start = el.asJsonObject.get("starttime").asString
             )
             periodsList.add(periodStartEnd)
         }

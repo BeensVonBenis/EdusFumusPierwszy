@@ -1,7 +1,13 @@
 package com.example.edusfumuspierwszy
 
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Intent
 import android.os.Bundle
+import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.border
@@ -17,13 +23,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusfumuspierwszy.ui.theme.EdusFumusPierwszyTheme
+import androidx.compose.ui.platform.LocalContext
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             EdusFumusPierwszyTheme {
-                // A surface container using the 'background' color from the theme
+                // Start the background service
+                val context = LocalContext.current
+                LaunchedEffect(Unit) {
+                    val intent = Intent(context, MyForegroundService::class.java)
+                    context.startForegroundService(intent)
+                }
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -37,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
-
+    val context = LocalContext.current
     val classesList = remember { mutableStateOf(LekcjeUtils.getClassesList()) }
     val expanded = remember { mutableStateOf(false) }
     val selectedItem = remember { mutableStateOf(ClassTile(id = "0", name = "Nie pobrano klas")) }
@@ -52,7 +65,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         loading.value = true;
         LekcjeUtils.fetchData();
-        plan.value = LekcjeUtils.getSchoolPlan("-114")
+        plan.value = LekcjeUtils.getSchoolPlan(context, "-114")
         classesList.value = LekcjeUtils.getClassesList();
         teachersList.value = LekcjeUtils.getTeachersList();
         loading.value = false;
@@ -78,7 +91,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         items(classesList.value) { item ->
                             Button(onClick = {
                                 selectedItem.value = item
-                                plan.value = LekcjeUtils.getSchoolPlan(item.id)
+                                plan.value = LekcjeUtils.getSchoolPlan(context, item.id)
                                 expanded.value = false
                             }) {
                                 Text(text = item.name)

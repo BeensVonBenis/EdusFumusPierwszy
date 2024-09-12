@@ -11,3 +11,4 @@ class SchoolPlanWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget
         get() = SchoolPlanWidget();
 }
+

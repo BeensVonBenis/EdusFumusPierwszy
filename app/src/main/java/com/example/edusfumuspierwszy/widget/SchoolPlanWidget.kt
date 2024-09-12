@@ -42,41 +42,44 @@ class SchoolPlanWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             GlanceTheme {
-                SchoolPlanDisplay()
+                SchoolPlanDisplay(context)
             }
         }
     }
 
     @Composable
-    fun SchoolPlanDisplay() {
+    fun SchoolPlanDisplay(context: Context) {
         val day = remember { mutableIntStateOf(LocalDate.now().dayOfWeek.value - 1) };
         val currentDateTime = remember { mutableStateOf(LocalDateTime.now()) }
         val lessons = remember {
-            mutableStateOf(LekcjeUtils.getSchoolPlan("-114"))
+            mutableStateOf(LekcjeUtils.getSchoolPlan(context, "-114"))
         }
         val periodStartEndList = remember { mutableStateOf(LekcjeUtils.getStartEndTimes()) };
         val loading = remember { mutableStateOf(true) }
-        suspend fun updateTime() {
+        fun updateTime() {
             currentDateTime.value = LocalDateTime.now()
             Log.d("Pobieranie", "datetimusa $currentDateTime")
             day.intValue = LocalDate.now().dayOfWeek.value - 1
-            delay(10_000) // Delay for 1 minute
-            updateTime();
         }
         LaunchedEffect(Unit) {
             loading.value = true
-            LekcjeUtils.fetchData()
-            lessons.value = LekcjeUtils.getSchoolPlan("-114")
-            loading.value = false
+            lessons.value = LekcjeUtils.getSchoolPlan(context, "-114")
             periodStartEndList.value = LekcjeUtils.getStartEndTimes()
             updateTime()
+            CoroutineScope(Dispatchers.IO).launch {
+                while (true) {
+                    currentDateTime.value = LocalDateTime.now()
+                    kotlinx.coroutines.delay(10000) // Update every second
+                }
+            }
+            loading.value = false
         }
         val updateTimeHandler = {
             CoroutineScope(Dispatchers.Main).launch {
                 updateTime()
             }
         }
-        if (loading.value) {
+        if (loading.value && lessons.value!!.isEmpty()) {
             Text("Pobieranie danych")
         } else {
             Column(
@@ -110,18 +113,18 @@ class SchoolPlanWidget : GlanceAppWidget() {
         Column(modifier = GlanceModifier.fillMaxWidth()) {
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 Text(
-                    text = "${tile.period.toString()} ${tile.subject}  ${tile.classroom} ",
+                    text = "${tile.period} ${tile.subject}  ${tile.classroom} ",
                     style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
                 )
                 Text(
                     text = "LKW ${
-                        minutesFromMidnight(
+                        timeStringToMinutes(periodData.start) - minutesFromMidnight(
                             dateTime
-                        ) - timeStringToMinutes(periodData.start)
+                        )
                     } ${
-                        minutesFromMidnight(
+                        timeStringToMinutes(periodData.end) - minutesFromMidnight(
                             dateTime
-                        ) - timeStringToMinutes(periodData.end)
+                        )
                     }", style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
                 )
             }
