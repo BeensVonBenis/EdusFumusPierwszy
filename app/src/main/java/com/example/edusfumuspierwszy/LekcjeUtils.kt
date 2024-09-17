@@ -65,7 +65,7 @@ fun saveSchoolPlanToCache(
     val json = gson.toJson(schoolPlan)
 
     // Store the data with the class ID as the key
-    editor.putString("school_plan_$selectedClassId", json)
+    editor.putString("school_plan", json)
     editor.apply() // Apply changes asynchronously
 }
 
@@ -76,7 +76,7 @@ fun getCachedSchoolPlan(
     val sharedPreferences = getPreferences(context)
 
     // Retrieve the JSON string for the selected class ID
-    val json = sharedPreferences.getString("school_plan_$selectedClassId", null) ?: return null
+    val json = sharedPreferences.getString("school_plan", null) ?: return null
 
     // Convert the JSON back to a List<List<SchoolPlanTile>>
     val gson = Gson()
@@ -110,7 +110,7 @@ object LekcjeUtils {
     suspend fun fetchData(): JsonArray? {
         val myApi = retrofit.create(LekcjeUtils.MyApi::class.java)
         val payload = LekcjeUtils.RequestPayload(
-            args = listOf(null, "269"),
+            args = listOf(null, "287"),
             gsh = "00000000"
         )
 
@@ -276,21 +276,22 @@ object LekcjeUtils {
         return schoolPlan;
     }
 
-    fun getSchoolPlan(context: Context, selectedClassId: String?): List<List<SchoolPlanTile>>? {
+    fun getSchoolPlan(
+        context: Context,
+        selectedClassId: String?,
+        overwrite: Boolean
+    ): List<List<SchoolPlanTile>>? {
         // If class ID is null, return null
         if (selectedClassId == null) return null
 
-        // Check if the school plan is available in cache
-        val cachedSchoolPlan = getCachedSchoolPlan(context, selectedClassId)
-
-        // If cached school plan exists, return it
-        if (cachedSchoolPlan != null) {
-            return cachedSchoolPlan
+        if (!overwrite) {
+            val cachedSchoolPlan = getCachedSchoolPlan(context, selectedClassId)
+            if (cachedSchoolPlan != null) {
+                return cachedSchoolPlan
+            }
         }
-
         // If not cached, generate the school plan and cache it
         val generatedSchoolPlan = generateSchoolPlan(context, selectedClassId)
-
         // Return the newly generated school plan
         return generatedSchoolPlan
     }

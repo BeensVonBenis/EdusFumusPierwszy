@@ -65,7 +65,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         loading.value = true;
         LekcjeUtils.fetchData();
-        plan.value = LekcjeUtils.getSchoolPlan(context, "-114")
+        plan.value = LekcjeUtils.getSchoolPlan(context, "-114", true)
         classesList.value = LekcjeUtils.getClassesList();
         teachersList.value = LekcjeUtils.getTeachersList();
         loading.value = false;
@@ -91,7 +91,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         items(classesList.value) { item ->
                             Button(onClick = {
                                 selectedItem.value = item
-                                plan.value = LekcjeUtils.getSchoolPlan(context, item.id)
+                                plan.value = LekcjeUtils.getSchoolPlan(context, item.id, true)
                                 expanded.value = false
                             }) {
                                 Text(text = item.name)

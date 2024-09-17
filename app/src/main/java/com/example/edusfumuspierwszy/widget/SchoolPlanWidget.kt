@@ -52,7 +52,7 @@ class SchoolPlanWidget : GlanceAppWidget() {
         val day = remember { mutableIntStateOf(LocalDate.now().dayOfWeek.value - 1) };
         val currentDateTime = remember { mutableStateOf(LocalDateTime.now()) }
         val lessons = remember {
-            mutableStateOf(LekcjeUtils.getSchoolPlan(context, "-114"))
+            mutableStateOf(LekcjeUtils.getSchoolPlan(context, "-114", false))
         }
         val periodStartEndList = remember { mutableStateOf(LekcjeUtils.getStartEndTimes()) };
         val loading = remember { mutableStateOf(true) }
@@ -63,7 +63,7 @@ class SchoolPlanWidget : GlanceAppWidget() {
         }
         LaunchedEffect(Unit) {
             loading.value = true
-            lessons.value = LekcjeUtils.getSchoolPlan(context, "-114")
+            lessons.value = LekcjeUtils.getSchoolPlan(context, "-114", false)
             periodStartEndList.value = LekcjeUtils.getStartEndTimes()
             updateTime()
             CoroutineScope(Dispatchers.IO).launch {

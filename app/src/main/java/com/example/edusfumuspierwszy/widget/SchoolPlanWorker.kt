@@ -8,7 +8,7 @@ import com.google.gson.Gson
 class SchoolPlanWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
-        val schoolPlan = LekcjeUtils.getSchoolPlan(applicationContext, "-114")
+        val schoolPlan = LekcjeUtils.getSchoolPlan(applicationContext, "-114", false)
         if (schoolPlan != null) {
             cacheSchoolPlan(applicationContext, schoolPlan)
         }
