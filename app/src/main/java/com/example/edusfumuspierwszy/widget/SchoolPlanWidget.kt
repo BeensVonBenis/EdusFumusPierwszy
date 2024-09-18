@@ -17,12 +17,18 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.components.Scaffold
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
+import androidx.glance.layout.width
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
@@ -83,23 +89,43 @@ class SchoolPlanWidget : GlanceAppWidget() {
             Text("Pobieranie danych")
         } else {
             Column(
-                modifier = GlanceModifier.fillMaxSize().padding(8.dp).background(Color(36, 36, 36))
+                modifier = GlanceModifier.fillMaxSize().padding(top = 16.dp)
+                    .background(Color(36, 36, 36)).width(360.dp)
             ) {
-                Button("Aktualizuj", { updateTimeHandler() })
-                lessons.value?.get(day.value)
+                lessons.value?.get(day.intValue)
                     ?.sortedBy { tile -> tile.period }
                     ?.chunked(5) // Split into chunks of 5
                     ?.forEach { chunk ->
-                        Column {
+                        Column(modifier = GlanceModifier.padding(start = 8.dp, end = 8.dp)) {
+                            Text(
+                                modifier = GlanceModifier.background(Color(100, 100, 150, 255))
+                                    .fillMaxWidth()
+                                    .height(1.dp),
+                                text = "to jest legitny kurwa border"
+                            )
                             chunk.forEach { element ->
                                 SchoolPlanWidgetTile(
                                     tile = element,
-                                    periodData = periodStartEndList.value[element.period],
+                                    periodData = periodStartEndList.value[element.period - 1],
                                     dateTime = currentDateTime.value
                                 )
                             }
                         }
                     }
+                Spacer(modifier = GlanceModifier.defaultWeight())
+                Row(
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Button(
+                        "⟳",
+                        { updateTimeHandler() },
+                        GlanceModifier.size(32.dp).padding(bottom = 4.dp),
+                        style = TextStyle(color = ColorProvider(Color.White))
+                    )
+                }
             }
         }
     }
@@ -110,23 +136,56 @@ class SchoolPlanWidget : GlanceAppWidget() {
         periodData: PeriodStartEnd,
         dateTime: LocalDateTime
     ) {
+        var timeFromStart = timeStringToMinutes(periodData.start) - minutesFromMidnight(
+            dateTime
+        )
+        val timeFromEnd = timeStringToMinutes(periodData.end) - minutesFromMidnight(
+            dateTime
+        )
+
+        fun getProgress(): Number {
+            val duration = timeFromEnd - timeFromStart;
+            return if (timeFromStart < 0) {
+                if (timeFromEnd < 0) {
+                    360
+                } else {
+                    360 - (360 * timeFromEnd / duration)
+                }
+            } else {
+                0;
+            }
+
+        }
         Column(modifier = GlanceModifier.fillMaxWidth()) {
-            Row(modifier = GlanceModifier.fillMaxWidth()) {
-                Text(
-                    text = "${tile.period} ${tile.subject}  ${tile.classroom} ",
-                    style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
-                )
-                Text(
-                    text = "LKW ${
-                        timeStringToMinutes(periodData.start) - minutesFromMidnight(
-                            dateTime
+            Box {
+                Row {
+                    Text(
+                        modifier = GlanceModifier.background(Color(100, 100, 150, 50))
+                            .width(getProgress().toInt().dp)
+                            .height(22.dp),
+                        text = ""
+                    )
+                    if (getProgress().toInt() in 1..359) {
+                        Text(
+                            modifier = GlanceModifier.background(Color(100, 100, 150, 80))
+                                .width(2.dp)
+                                .height(22.dp),
+                            text = ""
                         )
-                    } ${
-                        timeStringToMinutes(periodData.end) - minutesFromMidnight(
-                            dateTime
-                        )
-                    }", style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
-                )
+                    }
+
+                }
+
+                Row(modifier = GlanceModifier.fillMaxWidth().padding(1.dp)) {
+                    Text(
+                        text = "${tile.period} ${tile.subject}  ${tile.classroom} ",
+                        style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
+                    )
+                    Text(
+                        text = "LKW $timeFromStart $timeFromEnd",
+                        style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
+                    )
+                }
             }
             Text(
                 modifier = GlanceModifier.background(Color(100, 100, 150, 255)).fillMaxWidth()
