@@ -52,6 +52,7 @@ android {
 
 dependencies {
     implementation("io.ktor:ktor-client-core:2.3.4")
+    implementation("androidx.navigation:navigation-compose:2.6.0")
     implementation("io.ktor:ktor-client-cio:2.3.4")
     implementation("io.ktor:ktor-client-json:2.3.4")
     implementation("io.ktor:ktor-client-serialization:2.3.4")
