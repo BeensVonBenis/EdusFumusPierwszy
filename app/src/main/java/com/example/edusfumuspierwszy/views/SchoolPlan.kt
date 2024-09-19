@@ -30,7 +30,7 @@ import com.example.edusfumuspierwszy.composables.SchoolPlanDisplay
 @Composable
 fun SchoolPlan(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val expanded = remember { mutableStateOf(true) }
+    val expanded = remember { mutableStateOf(false) }
     val classesList = remember { mutableStateOf(LekcjeUtils.getClassesList()) }
     val selectedClass = remember { mutableStateOf("4PI Tech-p") }
     val plan = remember { mutableStateOf(LekcjeUtils.bufferedSchoolPlan) }
@@ -61,7 +61,7 @@ fun SchoolPlan(modifier: Modifier = Modifier) {
                     DropdownMenuItem(text = { Text(text = el.name) }, onClick = {
                         expanded.value = false;
                         selectedClass.value = el.name
-                        plan.value = LekcjeUtils.getSchoolPlan(context, el.id, false)
+                        plan.value = LekcjeUtils.getSchoolPlan(context, el.id, true)
                     })
                 }
             }
@@ -69,6 +69,9 @@ fun SchoolPlan(modifier: Modifier = Modifier) {
         Box(modifier = Modifier.padding(8.dp)) {
             Text(text = "Plan lekcji dla klasy ${selectedClass.value}")
         }
-        SchoolPlanDisplay(plan = plan.value)
+        if (!plan.value.isNullOrEmpty()) {
+            SchoolPlanDisplay(plan = plan.value)
+        }
+
     }
 }
