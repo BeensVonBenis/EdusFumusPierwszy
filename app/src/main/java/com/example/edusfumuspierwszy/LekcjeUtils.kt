@@ -110,7 +110,7 @@ object LekcjeUtils {
     suspend fun fetchData(): JsonArray? {
         val myApi = retrofit.create(LekcjeUtils.MyApi::class.java)
         val payload = LekcjeUtils.RequestPayload(
-            args = listOf(null, "287"),
+            args = listOf(null, "293"),
             gsh = "00000000"
         )
 

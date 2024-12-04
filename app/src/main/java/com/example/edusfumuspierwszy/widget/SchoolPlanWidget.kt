@@ -182,7 +182,7 @@ class SchoolPlanWidget : GlanceAppWidget() {
                         style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
                     )
                     Text(
-                        text = "LKW $timeFromStart $timeFromEnd",
+                        text = "LKW $timeFromStart $timeFromEnd ${periodData.start}/${periodData.end}",
                         style = TextStyle(color = ColorProvider(Color(255, 255, 255, 255)))
                     )
                 }

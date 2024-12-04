@@ -30,10 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.edusfumuspierwszy.ui.theme.EdusFumusPierwszyTheme
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.NotificationCompat
+import com.example.edusfumuspierwszy.notifications.showNotification
 import com.example.edusfumuspierwszy.views.MainView
 import com.example.edusfumuspierwszy.views.Options
 import com.example.edusfumuspierwszy.views.TeacherPlan
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

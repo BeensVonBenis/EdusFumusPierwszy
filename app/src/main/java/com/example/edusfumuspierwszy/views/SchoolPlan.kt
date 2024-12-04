@@ -46,7 +46,7 @@ fun SchoolPlan(modifier: Modifier = Modifier) {
         ) {
             Button(onClick = { expanded.value = !expanded.value }) {
                 Row {
-                    Text(text = "Wybierz klasę")
+                    Text(text = "${selectedClass.value}")
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
                         contentDescription = "More"
